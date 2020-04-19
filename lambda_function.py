@@ -3,7 +3,6 @@ from selenium.webdriver.chrome.options import Options
 import os
 import mysql.connector
 import time
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 def lambda_handler(event= {"url":"https://www.google.com/"}, context=None):
