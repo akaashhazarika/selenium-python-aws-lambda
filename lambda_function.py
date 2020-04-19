@@ -105,12 +105,12 @@ def lambda_handler(event= {"url":"https://www.google.com/"}, context=None):
 			location_within_country.append("Yes")
 			FIPS.append(fips)
 
-		counter = 0
+		counter = 1
 		for a,b,c,d in zip(location_current_name,country,location_within_country,FIPS):
 			mycursor = mydb.cursor()
 			val = d
 			sql = "SELECT * FROM  fips WHERE fc = " "'"+(str(val))+ "'"
-			print(sql)
+			print("progress "  +str(len(counter)/len(FIPS)), " batch",index) 
 			mycursor.execute(sql)
 
 			myresult = mycursor.fetchall()
