@@ -52,7 +52,7 @@ def lambda_handler(event= {"url":"https://www.google.com/"}, context=None):
 	# chrome_options.binary_location = os.getcwd() + "/bin/headless-chromium"
 	driver = webdriver.Chrome(chrome_options=chrome_options)
 
-	for index,url in enumerate(urls[:1]):
+	for index,url in enumerate(urls):
 		mydb = mysql.connector.connect(
 		host="remotemysql.com",
 		user="3QzXxevchm",
@@ -77,62 +77,59 @@ def lambda_handler(event= {"url":"https://www.google.com/"}, context=None):
 					flag2 = False
 				if flag2:
 					country_names_codes.append(t.text)
-			location_current_name = []
-			country = []
-			location_within_country = []
-			FIPS = []
-			location_current_name = []
-			country = []
-			location_within_country = []
-			FIPS = []
-			i1 = -1
-			current_code = ""
-			for elem in custom_list:
-				area_code = elem[:2]
-				if area_code!=current_code:
-					i1+=1
-					current_code = country_names_codes[i1].split(" ")[1][:-1]
-					#Appending Country
-					location_name =  country_names_codes[i1].split(" ")[-1]
-					fips = current_code 
-					location_current_name.append(location_name)
-					country.append("Yes")
-					location_within_country.append("No")
-					FIPS.append(fips)
-
-				#Appending Corresponding area
-				location_name = elem.split(":")[1][1:]
-				fips = elem.split(":")[0]
+			
+		location_current_name = []
+		country = []
+		location_within_country = []
+		FIPS = []
+		i1 = -1
+		current_code = ""
+		for elem in custom_list:
+			area_code = elem[:2]
+			if area_code!=current_code:
+				i1+=1
+				current_code = country_names_codes[i1].split(" ")[1][:-1]
+				#Appending Country
+				location_name =  country_names_codes[i1].split(" ")[-1]
+				fips = current_code 
 				location_current_name.append(location_name)
-				country.append("No")
-				location_within_country.append("Yes")
+				country.append("Yes")
+				location_within_country.append("No")
 				FIPS.append(fips)
 
-			counter = 0
-			for a,b,c,d in zip(location_current_name,country,location_within_country,FIPS):
+			#Appending Corresponding area
+			location_name = elem.split(":")[1][1:]
+			fips = elem.split(":")[0]
+			location_current_name.append(location_name)
+			country.append("No")
+			location_within_country.append("Yes")
+			FIPS.append(fips)
+
+		counter = 0
+		for a,b,c,d in zip(location_current_name,country,location_within_country,FIPS):
+			mycursor = mydb.cursor()
+			val = d
+			sql = "SELECT * FROM  fips WHERE fc = " "'"+(str(val))+ "'"
+			print(sql)
+			mycursor.execute(sql)
+
+			myresult = mycursor.fetchall()
+			if myresult[0][0]!=a:
 				mycursor = mydb.cursor()
-				val = d
-				sql = "SELECT * FROM  fips WHERE fc = " "'"+(str(val))+ "'"
-				print(sql)
+				sql = "UPDATE fips SET hn = 'Yes' WHERE fc = " "'"+(str(val))+ "'"
 				mycursor.execute(sql)
+				mydb.commit()
 
-				myresult = mycursor.fetchall()
-				if myresult[0][0]!=a:
-					mycursor = mydb.cursor()
-					sql = "UPDATE fips SET hn = 'Yes' WHERE fc = " "'"+(str(val))+ "'"
-					mycursor.execute(sql)
-					mydb.commit()
+				mycursor = mydb.cursor()
+				sql = "UPDATE fips SET lc = " "'"+(str(a))+ "'" +" WHERE fc = " "'"+(str(val))+ "'"
+				mycursor.execute(sql)
+				mydb.commit()
+				print("inside")
 
-					mycursor = mydb.cursor()
-					sql = "UPDATE fips SET lc = " "'"+(str(a))+ "'" +" WHERE fc = " "'"+(str(val))+ "'"
-					mycursor.execute(sql)
-					mydb.commit()
-					print("inside")
-
-					if counter%30==0:
-						print("Execution Progress")
-						print(index,counter)
-				counter+=1  
+				if counter%30==0:
+					print("Execution Progress")
+					print(index,counter)
+			counter+=1  
 
 
 
